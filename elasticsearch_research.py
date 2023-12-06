@@ -56,7 +56,8 @@ def short_query(client_es, requetes, index_name, do_preprocessing, short_request
                 query = preprocess(query)
                 
             response = client_es.search(index=index_name, body={"query": {"match": {"text": query}}, "size": 1000})
-            ranked_results = sorted(response["hits"]["hits"], key=lambda x: x["_score"], reverse=True)
+            # trier les résultats par score et par doc_id
+            ranked_results = sorted(response["hits"]["hits"], key=lambda x: (x["_score"]), reverse=True)
             for rank, hit in enumerate(ranked_results):
                 file.write(f"{int(requete['num'])} {0} {hit['_source']['doc_id']} {rank + 1} {hit['_score']} {run_name}\n")
         file.write
@@ -69,7 +70,7 @@ def long_query(client_es, requetes, index_name, do_preprocessing, long_request_r
             if do_preprocessing:
                 query = preprocess(query)
             response = client_es.search(index=index_name, body={"query": {"match": {"text": query}}, "size": 1000})
-            ranked_results = sorted(response["hits"]["hits"], key=lambda x: x["_score"], reverse=True)
+            ranked_results = sorted(response["hits"]["hits"], key=lambda x: (x["_score"]), reverse=True)
             for rank, hit in enumerate(ranked_results):
                 file.write(f"{int(requete['num'])} {0} {hit['_source']['doc_id']} {rank + 1} {hit['_score']} {run_name}\n")
         file.write
@@ -84,7 +85,7 @@ def research(do_preprocessing, similarity, index_name, short_request_result_file
         return e
     
     # Chemin du dossier contenant les fichiers zip
-    request_folder_path = "TREC_AP_88_90\Topics-requetes"
+    request_folder_path = "TREC_AP_88_90/Topics-requetes"
 
     requetes = get_requests(request_folder_path)
     print(f"Nombre de requests : {len(requetes)}")

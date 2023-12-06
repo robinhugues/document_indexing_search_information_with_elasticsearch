@@ -1,12 +1,17 @@
 import os
 import subprocess
+import sys
 
 
 def merge_qrels_from_folder(output_file):
     print("=====> Récupération des jugements de pertinance.............>")
+
+    # supprimer le fichier s'il existe déjà
+    if os.path.exists(output_file):
+        os.remove(output_file)
     
     # Chemin du dossier contenant les fichiers jugements de pertinence
-    jugements_de_pertinence_folder_path = "TREC_AP_88_90\Jugements_de_pertinence"
+    jugements_de_pertinence_folder_path = "TREC_AP_88_90/Jugements_de_pertinence"
 
     try:
         merged_content = ""
@@ -25,9 +30,10 @@ def merge_qrels_from_folder(output_file):
             
     except Exception as e:
         print(f"Erreur lors de la fusion et du tri des fichiers de jugements : {e}")
+        sys.exit(1)
 
 
-def get_files_starting_with():
+def get_files_starting_by_result():
     current_folder = "."
     try:
         matching_files = [file for file in os.listdir(current_folder) if file.startswith("result") and file.endswith('.txt')]
@@ -37,9 +43,9 @@ def get_files_starting_with():
         return []
     
 
-
 def run_trec_eval():
-    # try:
+    print("=====> Compilation et Génération des liens de trec_eval.............>")
+    try:
         # Entrer dans le dossier trec_eval-9.0.7 dans TREX_AP_88_90
         os.chdir('trec_eval_9_0_7')
 
@@ -49,37 +55,27 @@ def run_trec_eval():
         # Sortir du dossier trec_eval_9_0_7
         os.chdir('..')
 
-    # except Exception as e:
-    #     print(f"Erreur lors de la compilation de trec_eval : {e}")
+    except Exception as e:
+        print(f"Erreur lors de la compilation de trec_eval : {e}")
 
 
 
 def run_evaluation(qrels_file):
-    try:
-        matching_files = get_files_starting_with()
-        os.chdir('trec_eval_9_0_7')
-        # for results_file in matching_files[0]:
-            
-        command = f'./trec_eval -q ../{qrels_file} ../{matching_files[1]}'
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
-
-        if result.returncode == 0:
-            print(result.stdout)
-        else:
-            print(f"L'évaluation avec trec_eval a renvoyé: {result.returncode} {result.stderr}")
-
-        # Sortir du dossier trec_eval_9_0_7
-        os.chdir('..')
+    print("=====> Evaluation en cours.............>")
+    matching_files = get_files_starting_by_result()
+    os.chdir('trec_eval_9_0_7')
+    for results_file in matching_files:
+        try:
+            command = f'./trec_eval -q ../{qrels_file} ../{results_file}'
+            result = subprocess.run(command, shell=True, capture_output=True, text=True)
+            if result.returncode == 0:
+                # stocker le resultat dans un fichier
+                with open(f"../trec_eval_evaluation_{results_file}", 'w') as output:
+                    output.write(result.stdout)
+            else:
+                print(f"L'évaluation avec trec_eval a renvoyé: {result.returncode} {result.stderr}")
+        except Exception as e:
+            print(f"Erreur lors de l'évaluation avec trec_eval : {e}") 
+    # Sortir du dossier trec_eval_9_0_7 
+    os.chdir('..')
         
-    except Exception as e:
-        print(f"Erreur lors de l'évaluation avec trec_eval : {e}")   
-    
-
-
-
-run_trec_eval()
-output_file = "jugements_de_pertinence.txt"
-run_evaluation(output_file)
-
-
-
