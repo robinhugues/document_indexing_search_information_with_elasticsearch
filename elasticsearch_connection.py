@@ -1,9 +1,7 @@
 from elasticsearch import Elasticsearch
 
 def connect_to_elasticsearch(cloud_id, elastic_password):
-    """
-    Établit une connexion à Elasticsearch et renvoie le client Elasticsearch.
-    """
+
     client_es = Elasticsearch(
         cloud_id=cloud_id,
         basic_auth=("elastic", elastic_password)

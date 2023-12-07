@@ -72,7 +72,7 @@ def documents_extraction(documents_folder_path, do_preprocessing, documents_file
     try:
         with open(documents_file_name, 'w') as json_file:
             json.dump(documents, json_file)
-        print(f"Nombre de documents extraits et enregistrés : {len(documents)}")
+        print(f"Nombre de documents extraits et enregistrés : {len(documents)} pour l'index {index}")
     except Exception as e:
         print(f"Erreur lors de l'extraction des documents : {e}")
         return e
