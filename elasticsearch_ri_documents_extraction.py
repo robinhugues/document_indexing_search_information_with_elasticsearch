@@ -25,7 +25,7 @@ def read_zip_file(documents_folder_path):
 
 
 def documents_extraction(documents_folder_path, do_preprocessing, documents_file_name, index) :
-    print("=====> Extraction des documents ..........")
+    print("....... Extraction des documents ..........")
     doc_pattern = re.compile(r'<DOC>(.*?)</DOC>', re.DOTALL)
     docno_pattern = re.compile(r'<DOCNO>\s*(.*?)\s*</DOCNO>')
     head_pattern = re.compile(r'<HEAD>\s*(.*?)\s*</HEAD>')

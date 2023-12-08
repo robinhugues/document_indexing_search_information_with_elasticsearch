@@ -1,10 +1,11 @@
 import os
 import subprocess
 import sys
+from elasticsearch_ri_global_functions import get_files_starting_by_result
 
 
 def merge_qrels_from_folder(output_file):
-    print("...... Récupération des jugements de pertinance.............>")
+    print("...... Récupération des jugements de pertinance.............")
 
     # supprimer le fichier s'il existe déjà
     if os.path.exists(output_file):
@@ -31,16 +32,6 @@ def merge_qrels_from_folder(output_file):
     except Exception as e:
         print(f"Erreur lors de la fusion et du tri des fichiers de jugements : {e}")
         sys.exit(1)
-
-
-def get_files_starting_by_result():
-    current_folder = "."
-    try:
-        matching_files = [file for file in os.listdir(current_folder) if file.startswith("result") and file.endswith('.txt')]
-        return matching_files
-    except Exception as e:
-        print(f"Erreur lors de la récupération des fichiers : {e}")
-        return []
     
 
 def run_trec_eval():
@@ -66,7 +57,7 @@ def run_evaluation(qrels_file):
     os.chdir('trec_eval_9_0_7')
     for results_file in matching_files:
         try:
-            command = f'./trec_eval -q ../{qrels_file} ../{results_file}'
+            command = f'./trec_eval ../{qrels_file} ../{results_file}'
             result = subprocess.run(command, shell=True, capture_output=True, text=True)
             if result.returncode == 0:
                 # stocker le resultat dans un fichier
@@ -76,6 +67,23 @@ def run_evaluation(qrels_file):
                 print(f"L'évaluation avec trec_eval a renvoyé: {result.returncode} {result.stderr}")
         except Exception as e:
             print(f"Erreur lors de l'évaluation avec trec_eval : {e}") 
+            sys.exit(1)
+
     # Sortir du dossier trec_eval_9_0_7 
     os.chdir('..')
+    print("Evaluation avec trec_eval terminée avec succès")
+
+
+def main():
+    try:
+        output_file = "jugements_de_pertinence.txt"
+        merge_qrels_from_folder(output_file)
+        run_trec_eval()
+        run_evaluation(output_file)
+    except Exception as e:
+        print(f"Erreur lors de l'évaluation avec trec_eval : {e}")
+        sys.exit(1)
+
+# Lancer le programme
+main()
         

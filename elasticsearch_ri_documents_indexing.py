@@ -24,7 +24,7 @@ def index_documents(client_es, documents_json_file_name, index_name, similarity)
  
     # lire dans le fichier json des documents et récupérer les documents
     documents = extract_documents_from_json(documents_json_file_name)
-    print(f"=====> Nombre de documents à indexer : {len(documents)} .............>")
+    print(f"....... Nombre de documents à indexer : {len(documents)} .............>")
 
     # Créer un tableau contenant les différents types de similarité
     similarities  = {
@@ -56,16 +56,22 @@ def index_documents(client_es, documents_json_file_name, index_name, similarity)
 
     body = {
         "mappings": {
+            # "properties": {
+            #     "language": {"type": "keyword"},
+            #     "id": {"type": "keyword"},
+            #     "title": {"type": "text"},
+            #     "passage": {"type": "text"},
+            #     "passage_embedding": {
+            #         "type": "dense_vector",
+            #         "dims": 768,
+            #         "index": "true",
+            #         "similarity": "cosine"
+            #     }
+            # }
             "properties": {
-                "language": {"type": "keyword"},
-                "id": {"type": "keyword"},
-                "title": {"type": "text"},
-                "passage": {"type": "text"},
-                "passage_embedding": {
-                    "type": "dense_vector",
-                    "dims": 768,
-                    "index": "true",
-                    "similarity": "cosine"
+                "text": {
+                    "type": "text",
+                    "similarity": next(iter(similarities[similarity]))
                 }
             }
         },
@@ -78,13 +84,13 @@ def index_documents(client_es, documents_json_file_name, index_name, similarity)
     # Création de l'index
     try:
         client_es.indices.create(index=index_name, body=body)
-        print(f"=====> Index {index_name} créé avec succès .............>")
+        print(f"....... Index {index_name} créé avec succès .............>")
     except Exception as e:
         print(f"Erreur lors de la création de l'index {index_name} : {e}")
         return e
 
     try:
-        print(f"=====> Indexation des documents dans l'index {index_name}.............>")
+        print(f"....... Indexation des documents dans l'index {index_name}.............>")
         # indexer les documents JSON dans Elasticsearch
         helpers.bulk(client_es, documents)
         response = client_es.search(index=index_name, body={"query": {"match_all": {}}})

@@ -9,7 +9,7 @@ from elasticsearch_ri_documents_indexing import index_documents
 from elasticsearch_ri_documents_extraction import documents_extraction
 from elasticsearch_connection import connect_to_elasticsearch
 from elasticsearch_ri_requests_extraction import get_requests
-from elasticsearch_ri_evaluation import merge_qrels_from_folder, run_trec_eval, run_evaluation, get_files_starting_by_result
+from elasticsearch_ri_global_functions import get_files_starting_by_result
 
 
 elastic_password = os.environ.get("ELASTIC_PASSWORD")
@@ -28,7 +28,7 @@ except Exception as e:
     print(f"Erreur lors de la récupération des requêtes : {e}")
     sys.exit(1)
 
-do_preprocessing = False
+do_preprocessing = True
 
 research_result_files = get_files_starting_by_result()
 
@@ -45,13 +45,11 @@ for similarity in SIMILARITIES:
         documents_json_file_name = "documents_with_preprocessing.json" if similarity == "cosine" else "documents_with_preprocessing_" + similarity + ".json"
         short_request_result_file_name = "result_short_request_preproced_" + similarity + ".txt"
         long_request_result_file_name = "result_long_request_preproced_" + similarity + ".txt"
-        run_name = "ELasticsearch_RI_with_preprocessing_" + similarity
         index_name = INDEX_NAME_WITH_PP if similarity == "cosine" else INDEX_NAME_WITH_PP + "_" + similarity
     else:
         documents_json_file_name = "documents_without_preprocessing.json" if similarity == "cosine" else "documents_without_preprocessing_" + similarity + ".json"
         short_request_result_file_name = "result_short_request_" + similarity + ".txt"
         long_request_result_file_name = "result_long_request_" + similarity + ".txt"
-        run_name = "ELasticsearch_RI_without_preprocessing_" + similarity
         index_name = INDEX_NAME_WITHOUT_PP if similarity == "cosine" else INDEX_NAME_WITHOUT_PP + "_" + similarity
 
     # Extraction des documents
@@ -82,8 +80,10 @@ for similarity in SIMILARITIES:
             for type_request in requests_types:
                 if type_request == "short":
                     request_result_file_name = short_request_result_file_name
+                    run_name =  "preprocessed_short_query_" + similarity if do_preprocessing  else "short_query_" + similarity
                 else:
                     request_result_file_name = long_request_result_file_name
+                    run_name =  "preprocessed_long_query_" + similarity if do_preprocessing  else "long_query_" + similarity
 
                 research(requetes, client_es, do_preprocessing, index_name, request_result_file_name, run_name, type_request)
             print("Les requêtes sur les documents de l'index :", index_name ," ont été exécutées avec succès")
@@ -93,7 +93,7 @@ for similarity in SIMILARITIES:
 
     print("\n")
 print("Fin de l'indexation et de la recherche d'information")
-
+print("\n")
 
 # déconnexion de Elasticsearch
 try:
@@ -103,18 +103,3 @@ except Exception as e:
     print(f"Erreur lors de la déconnexion de Elasticsearch : {e}")
     sys.exit(1)
 
-
-print("\n")
-
-# Evaluation avec trec_eval
-if(len(research_result_files) == 12):
-    try:
-        output_file = "jugements_de_pertinence.txt"
-        merge_qrels_from_folder(output_file)
-        run_trec_eval()
-        run_evaluation(output_file)
-    except Exception as e:
-        print(f"Erreur lors de l'évaluation avec trec_eval : {e}")
-        sys.exit(1)
-else:
-    print("Exécutez d'abord toutes les requêtes avant de faire l'évaluation avec trec_eval")
